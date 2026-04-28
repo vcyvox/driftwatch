@@ -1,0 +1,43 @@
+{
+  "figma": {
+    "token": "your-figma-personal-access-token",
+    "fileId": "your-figma-file-id",
+    "nodeIds": []
+  },
+  "baseUrl": "http://localhost:3000",
+  "breakpoints": [1280],
+  "out": "./drift-reports",
+
+  "auth": {
+    "_comment": "Remove this block entirely if your app does not require login",
+    "loginUrl":         "http://localhost:3000/login",
+    "usernameSelector": "input[type='email']",
+    "passwordSelector": "input[type='password']",
+    "submitSelector":   "button[type='submit']",
+    "username":         "your-email@example.com",
+    "password":         "your-password",
+    "waitAfterLogin":   3000
+  },
+
+  "targets": [
+    {
+      "name":        "Homepage Hero",
+      "url":         "http://localhost:3000",
+      "selector":    "[data-driftwatch='Homepage Hero']",
+      "figmaNodeId": "0:1"
+    }
+  ],
+
+  "output": {
+    "dir":    "./drift-reports",
+    "format": ["html", "json"]
+  },
+
+  "thresholds": {
+    "colorDeltaE":       2,
+    "spacingPx":         4,
+    "fontSizePx":        1,
+    "borderRadiusPx":    2,
+    "pixelDiffPercent":  1
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@driftwatch/reporter",
+  "version": "1.0.0",
+  "description": "Driftwatch reporter - HTML + JSON report generator",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {}
+}

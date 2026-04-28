@@ -1,0 +1,22 @@
+{
+  "name": "@driftwatch/cli",
+  "version": "1.0.0",
+  "description": "Driftwatch CLI - Figma-to-live-UI drift detector",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "driftwatch": "./bin/driftwatch.js"
+  },
+  "scripts": {
+    "start": "node bin/driftwatch.js",
+    "dev":   "node bin/driftwatch.js",
+    "legacy": "node src/index.js"
+  },
+  "dependencies": {
+    "@driftwatch/core": "*",
+    "@driftwatch/reporter": "*",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "ora": "^7.0.1"
+  }
+}

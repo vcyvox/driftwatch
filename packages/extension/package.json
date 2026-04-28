@@ -1,0 +1,10 @@
+{
+  "name": "@driftwatch/extension",
+  "version": "1.0.0",
+  "description": "Driftwatch browser extension (coming soon)",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {}
+}

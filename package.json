@@ -1,0 +1,19 @@
+{
+  "name": "driftwatch-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Figma-to-live-UI drift detector",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "demo": "node scripts/demo.js",
+    "driftwatch": "node packages/cli/src/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
