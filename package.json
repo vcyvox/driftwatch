@@ -1,6 +1,6 @@
 {
   "name": "driftwatchjs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Figma to Live UI Drift Detector — catch visual regressions before your users do",
   "type": "module",
   "main": "packages/cli/bin/driftwatch.js",
@@ -10,10 +10,18 @@
   "workspaces": [
     "packages/*"
   ],
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^11.0.0",
+    "ora": "^7.0.1",
+    "playwright": "^1.40.0",
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0"
+  },
   "scripts": {
     "check": "node packages/cli/bin/driftwatch.js check",
-    "demo": "node scripts/demo.js",
-    "test": "node scripts/test-cli.js"
+    "demo":  "node scripts/demo.js",
+    "test":  "node scripts/test-cli.js"
   },
   "keywords": [
     "figma",

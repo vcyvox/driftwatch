@@ -3,7 +3,8 @@
 import fs from 'fs';
 import path from 'path';
 import { generateHtmlReport, generateHTMLReport as _generateHTMLReport } from './html.js';
-import { generateReport as buildReportData } from '@driftwatch/core';
+import { generateReport as buildReportData } from '../../core/src/index.js';
+
 
 /**
  * generateHTMLReport — called directly by the new CLI bin (bin/driftwatch.js).

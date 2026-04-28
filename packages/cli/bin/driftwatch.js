@@ -8,9 +8,10 @@ import ora from 'ora';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { fetchFigmaData, compareComponent, generateReport } from '@driftwatch/core';
+import { fetchFigmaData, compareComponent, generateReport } from '../../core/src/index.js';
 import { captureDOM } from '../src/capture.js';
-import { generateHTMLReport } from '@driftwatch/reporter';
+import { generateHTMLReport } from '../../reporter/src/index.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -32,7 +33,8 @@ const program = new Command();
 program
   .name('driftwatch')
   .description('Figma to live UI drift detector')
-  .version('0.1.0');
+  .version('0.1.1');
+
 
 // ─── check ───────────────────────────────────────────────────────────────────
 program

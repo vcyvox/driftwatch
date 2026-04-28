@@ -5,8 +5,9 @@
 import { program } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { runCheck } from '@driftwatch/core';
-import { generateReport } from '@driftwatch/reporter';
+import { runCheck } from '../../core/src/index.js';
+import { generateReport } from '../../reporter/src/index.js';
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
