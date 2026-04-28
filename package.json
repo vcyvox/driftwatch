@@ -1,18 +1,37 @@
 {
-  "name": "driftwatch-monorepo",
-  "version": "1.0.0",
-  "private": true,
+  "name": "driftwatch",
+  "version": "0.1.0",
+  "description": "Figma to Live UI Drift Detector — catch visual regressions before your users do",
   "type": "module",
-  "description": "Figma-to-live-UI drift detector",
+  "main": "packages/cli/bin/driftwatch.js",
+  "bin": {
+    "driftwatch": "packages/cli/bin/driftwatch.js"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "demo": "node scripts/demo.js",
-    "driftwatch": "node packages/cli/src/index.js"
+    "check": "node packages/cli/bin/driftwatch.js check",
+    "demo":  "node scripts/demo.js",
+    "test":  "node scripts/test-cli.js"
   },
+  "keywords": [
+    "figma",
+    "design-drift",
+    "frontend",
+    "devtools",
+    "playwright",
+    "cli",
+    "visual-regression",
+    "design-system"
+  ],
+  "author": "Vicky",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vcyvox/driftwatch.git"
+  },
+  "homepage": "https://github.com/vcyvox/driftwatch#readme",
   "engines": {
     "node": ">=18.0.0"
   }

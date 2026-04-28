@@ -1,0 +1,31 @@
+# Generated output — never publish these
+drift-report/
+drift-reports/
+screenshots/
+
+# Secrets
+driftwatch.config.json
+.env
+.env.*
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# Dev scripts (not needed by consumers)
+scripts/
+
+# Git config
+.gitignore
+.gitattributes
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Test output
+*.log
+npm-debug.log*
