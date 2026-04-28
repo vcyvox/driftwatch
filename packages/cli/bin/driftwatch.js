@@ -33,7 +33,7 @@ const program = new Command();
 program
   .name('driftwatch')
   .description('Figma to live UI drift detector')
-  .version('0.1.1');
+  .version('0.1.2');
 
 
 // ─── check ───────────────────────────────────────────────────────────────────

@@ -21,19 +21,17 @@ Driftwatch compares your live production UI against your Figma designs by fetchi
 ## Quick Start
 
 ```bash
-# Install
-npm install
+# Install globally — Playwright Chromium downloads automatically
+npm install -g driftwatchjs
 
-# Install Playwright browser
-npx playwright install chromium
-
-# Initialize config
-npx driftwatch init
+# Initialize config in your project
+driftwatchjs init
 
 # Edit driftwatch.config.json with your Figma token + targets
+# Tag your components:  <div data-driftwatch="Hero Section">
 
 # Run drift check
-npx driftwatch check
+driftwatchjs check
 ```
 
 ---

@@ -1,6 +1,6 @@
 {
   "name": "driftwatchjs",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Figma to Live UI Drift Detector — catch visual regressions before your users do",
   "type": "module",
   "main": "packages/cli/bin/driftwatch.js",
@@ -19,6 +19,7 @@
     "pngjs": "^7.0.0"
   },
   "scripts": {
+    "postinstall": "npx playwright install chromium",
     "check": "node packages/cli/bin/driftwatch.js check",
     "demo":  "node scripts/demo.js",
     "test":  "node scripts/test-cli.js"
