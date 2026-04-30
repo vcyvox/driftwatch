@@ -38,6 +38,10 @@ export async function fetchFigmaData(fileKey, token) {
     { headers: { 'X-Figma-Token': token } }
   );
 
+  // Fix 2 — friendly error messages for common Figma API failures
+  if (res.status === 403) {
+    throw new Error('Invalid Figma token — check figmaToken in your driftwatch.config.json');
+  }
   if (!res.ok) {
     throw new Error(`Figma API error: ${res.status} ${res.statusText}`);
   }
@@ -59,6 +63,10 @@ export async function fetchFigmaNode(fileKey, token, nodeId) {
     { headers: { 'X-Figma-Token': token } }
   );
 
+  // Fix 2 — friendly error messages for common Figma API failures
+  if (res.status === 403) {
+    throw new Error('Invalid Figma token — check figmaToken in your driftwatch.config.json');
+  }
   if (!res.ok) {
     throw new Error(`Figma API error: ${res.status} ${res.statusText}`);
   }
@@ -72,6 +80,49 @@ export async function fetchFigmaNode(fileKey, token, nodeId) {
   // Parse just this one node (and its children), deduplicate, return first
   const parsed = deduplicateByName(parseFigmaNodes(nodeWrapper.document));
   return parsed.length > 0 ? parsed[0] : null;
+}
+
+/**
+ * Fix 3 — Batch-fetch multiple Figma nodes by ID in a single API call.
+ * Uses GET /v1/files/{fileKey}/nodes?ids=id1,id2,... which is much less
+ * rate-limited than the full-file endpoint.
+ *
+ * @param {string}   fileKey  - Figma file key
+ * @param {string}   token    - Figma personal access token
+ * @param {string[]} nodeIds  - Array of node IDs e.g. ["737:9476", "2216:6154"]
+ * @returns {Promise<object[]>} - Flat array of parsed component objects
+ */
+export async function fetchFigmaNodes(fileKey, token, nodeIds) {
+  if (!nodeIds || nodeIds.length === 0) return [];
+
+  const ids = nodeIds.map(encodeURIComponent).join(',');
+  const res = await fetchWithRetry(
+    `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${ids}`,
+    { headers: { 'X-Figma-Token': token } }
+  );
+
+  // Fix 2 — friendly error messages for common Figma API failures
+  if (res.status === 403) {
+    throw new Error('Invalid Figma token — check figmaToken in your driftwatch.config.json');
+  }
+  if (!res.ok) {
+    throw new Error(`Figma API error: ${res.status} ${res.statusText}`);
+  }
+
+  const data = await res.json();
+  const allComponents = [];
+
+  for (const nodeId of nodeIds) {
+    const nodeWrapper = data.nodes?.[nodeId];
+    if (!nodeWrapper) {
+      console.warn(`  ⚠  Node ${nodeId} not found in Figma file`);
+      continue;
+    }
+    const parsed = parseFigmaNodes(nodeWrapper.document);
+    allComponents.push(...parsed);
+  }
+
+  return deduplicateByName(allComponents);
 }
 
 // ─── Deduplication helper ───────────────────────────────────────────────────

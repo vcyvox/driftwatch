@@ -1,6 +1,6 @@
 {
   "name": "driftwatchjs",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Figma to Live UI Drift Detector — catch visual regressions before your users do",
   "type": "module",
   "main": "packages/cli/bin/driftwatch.js",

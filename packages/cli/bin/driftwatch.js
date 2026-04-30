@@ -8,7 +8,7 @@ import ora from 'ora';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { fetchFigmaData, compareComponent, generateReport } from '../../core/src/index.js';
+import { fetchFigmaData, fetchFigmaNodes, compareComponent, generateReport } from '../../core/src/index.js';
 import { captureDOM } from '../src/capture.js';
 import { generateHTMLReport } from '../../reporter/src/index.js';
 
@@ -33,7 +33,7 @@ const program = new Command();
 program
   .name('driftwatch')
   .description('Figma to live UI drift detector')
-  .version('0.1.2');
+  .version('0.1.3');
 
 
 // ─── check ───────────────────────────────────────────────────────────────────
@@ -60,7 +60,6 @@ program
 
     // ── Resolve config values ───────────────────────────────────────────
     // CLI flags always win, then config file, then sensible defaults.
-    // --token is intentionally removed — always read from config or FIGMA_TOKEN env.
     const url = options.url
       || config.baseUrl
       || config.targets?.[0]?.url
@@ -79,25 +78,35 @@ program
       || config.output?.dir
       || './drift-reports';
 
-    const breakpoints = config.breakpoints || [1280];
-    const auth        = config.auth ?? null;
+    const breakpoints  = config.breakpoints || [1280];
+    const auth         = config.auth ?? null;
+    // Fix 3 — read figmaNodeIds array from config
+    const figmaNodeIds = config.figmaNodeIds ?? [];
+
+    // Capture mode: 'manual' (default) or 'auto-scan'
+    const mode     = config.mode ?? 'manual';
+    const selector = config.selector ?? null;
 
     // ── Validate ────────────────────────────────────────────────
     if (!options.skipFigma) {
       if (!figmaFile) {
         console.error(chalk.red('  ✖ No Figma file key found.'));
-        console.error(chalk.gray('    Set figma.fileId in driftwatch.config.json'));
+        console.error(chalk.gray('    Set figmaFileKey in driftwatch.config.json'));
         process.exit(1);
       }
       if (!token) {
         console.error(chalk.red('  ✖ No Figma token found.'));
-        console.error(chalk.gray('    Set figma.token in driftwatch.config.json, or export FIGMA_TOKEN=<token>'));
+        console.error(chalk.gray('    Set figmaToken in driftwatch.config.json, or export FIGMA_TOKEN=<token>'));
         process.exit(1);
       }
     }
 
     console.log(chalk.white(`  Checking:    ${chalk.cyan(url)}`));
     console.log(chalk.white(`  Breakpoints: ${chalk.cyan(breakpoints.join(', '))}px`));
+    console.log(chalk.white(`  Mode:        ${chalk.cyan(mode)}`));
+    if (figmaNodeIds.length > 0) {
+      console.log(chalk.white(`  Node IDs:    ${chalk.cyan(figmaNodeIds.join(', '))}`));
+    }
     if (auth?.username) {
       console.log(chalk.white(`  Auth:        ${chalk.cyan(auth.usernameSelector ?? 'auto')} as ${chalk.cyan(auth.username)}`));
     }
@@ -108,10 +117,20 @@ program
     if (!options.skipFigma) {
       const figmaSpinner = ora('  Fetching Figma design specs...').start();
       try {
-        figmaComponents = await fetchFigmaData(figmaFile, token);
-        figmaSpinner.succeed(
-          chalk.green(`  Figma data fetched — ${figmaComponents.length} components found`)
-        );
+        if (figmaNodeIds.length > 0) {
+          // Fix 3 — use targeted node fetch (avoids full-file rate limit)
+          figmaComponents = await fetchFigmaNodes(figmaFile, token, figmaNodeIds);
+          figmaSpinner.succeed(
+            chalk.green(`  Figma data fetched — ${figmaComponents.length} components found (via nodeIds)`)
+          );
+        } else {
+          // Fall back to full-file fetch + tip about nodeIds
+          console.log(chalk.gray('  💡 Tip: Add figmaNodeIds to your config to fetch only specific nodes and avoid rate limits.'));
+          figmaComponents = await fetchFigmaData(figmaFile, token);
+          figmaSpinner.succeed(
+            chalk.green(`  Figma data fetched — ${figmaComponents.length} components found`)
+          );
+        }
       } catch (err) {
         figmaSpinner.fail(chalk.red(`  Failed to fetch Figma data: ${err.message}`));
         process.exit(1);
@@ -119,10 +138,10 @@ program
     }
 
     // ── Step 2: Capture live DOM ───────────────────────────────────────────
-    const domSpinner = ora('  Capturing live UI...').start();
+    const domSpinner = ora(`  Capturing live UI (${mode} mode)...`).start();
     let liveData;
     try {
-      liveData = await captureDOM(url, breakpoints, auth);
+      liveData = await captureDOM(url, breakpoints, auth, { mode, selector });
       domSpinner.succeed(
         chalk.green(`  Live UI captured — ${liveData.elements.length} element${liveData.elements.length !== 1 ? 's' : ''} found`)
       );
@@ -136,12 +155,13 @@ program
       console.log('');
       console.log(chalk.yellow('  ⚠  No data-driftwatch attributes found on this page.'));
       console.log(chalk.gray('\n  Driftwatch only compares elements you explicitly tag.'));
-      console.log(chalk.gray('  Add data-driftwatch attributes to your components to get precise results:\n'));
+      console.log(chalk.gray('  Add data-driftwatch attributes to your components:\n'));
       console.log(chalk.cyan('     <div data-driftwatch="Hero Section">...</div>'));
       console.log(chalk.cyan('     <button data-driftwatch="CTA Button">...</button>'));
-      console.log(chalk.cyan('     <nav data-driftwatch="Navigation">...</nav>'));
+      console.log(chalk.gray('\n  Or switch to auto-scan mode in your config:\n'));
+      console.log(chalk.cyan('     { "mode": "auto-scan", "selector": "main" }'));
       console.log('');
-      console.log(chalk.gray('  Then re-run: npx driftwatch check\n'));
+      console.log(chalk.gray('  Then re-run: npx driftwatchjs check\n'));
       process.exit(0);
     }
 
@@ -278,21 +298,22 @@ program
     }
 
     const config = {
-      figmaFileKey: 'your-figma-file-key',
-      figmaToken:   'your-figma-token',
-      baseUrl:      'http://localhost:3000',
-      breakpoints:  [375, 768, 1280],
-      out:          './drift-reports',
-      threshold:    0.05,
+      figmaFileKey:  'your-figma-file-key',
+      figmaToken:    'your-figma-token',
+      figmaNodeIds:  [],
+      baseUrl:       'http://localhost:3000',
+      breakpoints:   [375, 768, 1280],
+      out:           './drift-reports',
+      threshold:     0.05,
       auth: {
-        _comment:          'Remove this block if your app does not require login',
-        loginUrl:          'http://localhost:3000/login',
-        usernameSelector:  '#email',
-        passwordSelector:  '#password',
-        submitSelector:    'button[type="submit"]',
-        username:          'your-username',
-        password:          'your-password',
-        waitAfterLogin:    2000
+        _comment:         'Remove this block if your app does not require login',
+        loginUrl:         'http://localhost:3000/login',
+        usernameSelector: 'input[name="email"]',
+        passwordSelector: 'input[name="password"]',
+        submitSelector:   'button[type="submit"]',
+        username:         'your-email@example.com',
+        password:         'your-password',
+        waitAfterLogin:   2000
       }
     };
 
@@ -301,10 +322,11 @@ program
     console.log(
       chalk.gray('  Next steps:\n') +
       chalk.gray('  1. Add your Figma file key and token\n') +
-      chalk.gray('  2. Set baseUrl to your local dev server\n') +
-      chalk.gray('  3. If your app needs login, fill in the auth block\n') +
-      chalk.gray('  4. Tag components with data-driftwatch="Name"\n') +
-      chalk.gray('  5. Run: npx driftwatch check\n')
+      chalk.gray('  2. (Optional) Add figmaNodeIds for faster, rate-limit-safe fetching\n') +
+      chalk.gray('  3. Set baseUrl to your local dev server\n') +
+      chalk.gray('  4. If your app needs login, fill in the auth block\n') +
+      chalk.gray('  5. Tag components with data-driftwatch="Name"  (or use mode: "auto-scan")\n') +
+      chalk.gray('  6. Run: npx driftwatchjs check\n')
     );
   });
 
